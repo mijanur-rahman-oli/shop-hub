@@ -1,31 +1,12 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+// lib/api.ts
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export interface Item {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-}
-
-export async function getItems(): Promise<Item[]> {
-  const res = await fetch(`${API_BASE}/items`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to fetch items');
-  return res.json();
-}
-
-export async function getItem(id: string): Promise<Item | null> {
-  const res = await fetch(`${API_BASE}/items/${id}`, { cache: 'no-store' });
-  if (!res.ok) return null;
-  return res.json();
-}
-
-export async function createItem(item: Omit<Item, 'id'>): Promise<Item> {
-  const res = await fetch(`${API_BASE}/items`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(item)
+export async function getItems() {
+  const res = await fetch(`${API_BASE}/api/items`, {
+    cache: 'no-store',
+    credentials: 'include', // if you use cookies/auth later
   });
-  if (!res.ok) throw new Error('Failed to create item');
+  
+  if (!res.ok) throw new Error('Failed to fetch products');
   return res.json();
 }
