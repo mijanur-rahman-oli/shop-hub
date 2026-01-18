@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js Build Output
+.next/
+**/ .next/
+out/
+build/
+dist/
+
+# Environment Variables (Keep these strictly ignored)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env*
+
+# Vercel & Tooling
+.vercel
+.turbo
+*.tsbuildinfo
+
+# Logs & OS Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+.DS_Store
+Thumbs.db
