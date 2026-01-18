@@ -4,13 +4,13 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-// Middleware
+// Updated CORS for Production
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ["https://shop-hub-sandy-seven.vercel.app", "http://localhost:3000"],
   credentials: true
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -241,32 +241,22 @@ let items = [
 let nextId = 25;
 
 // Routes
-
-// GET all items
 app.get('/api/items', (req, res) => {
   res.json(items);
 });
 
-// GET single item by ID
 app.get('/api/items/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const item = items.find(i => i.id === id);
-  
-  if (!item) {
-    return res.status(404).json({ error: 'Item not found' });
-  }
-  
+  if (!item) return res.status(404).json({ error: 'Item not found' });
   res.json(item);
 });
 
-// POST new item
 app.post('/api/items', (req, res) => {
   const { name, description, price, image } = req.body;
-  
   if (!name || !description || !price) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
-  
   const newItem = {
     id: nextId++,
     name,
@@ -274,16 +264,27 @@ app.post('/api/items', (req, res) => {
     price: parseFloat(price),
     image: image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400'
   };
-  
   items.push(newItem);
   res.status(201).json(newItem);
 });
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+// IMPORTANT FOR VERCEL: 
+// We only call app.listen if we are NOT on Vercel (local development)
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`🚀 Local Server running on http://localhost:${PORT}`);
+  });
+}
+
+// Export for Vercel Serverless
+module.exports = app;
+
+
+
+
+
