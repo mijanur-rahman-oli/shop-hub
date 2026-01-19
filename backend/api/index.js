@@ -1,23 +1,17 @@
-// server.js
 import express from 'express';
 import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const app = express();
 
-// ── Middleware ────────────────────────────────────────────────
+// Middleware
 const allowedOrigins = [
   'https://shop-hub-sandy-seven.vercel.app',
   'http://localhost:3000',
-  'http://localhost:3001', // dev frontend if needed
+  'http://localhost:3001',
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -30,9 +24,8 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10mb' }));
-app.use(cookieParser());
 
-// ── In-memory data (for demo only) ─────────────────────────────
+// In-memory data store
 let items = [
   { id: 1, name: 'Premium Headphones', description: 'High-quality wireless headphones with noise cancellation', price: 299, category: 'Audio', brand: 'SoundMax', stock: 45, rating: 4.9, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400' },
   { id: 2, name: 'Smart Watch', description: 'Fitness tracking smartwatch with heart rate monitor', price: 399, category: 'Wearables', brand: 'TechFit', stock: 32, rating: 4.7, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400' },
@@ -57,20 +50,24 @@ let items = [
 ];
 
 let nextId = 25;
-// ── Routes ─────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
+
+// Health check
+app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    uptime: process.uptime()
+    environment: 'production',
+    itemCount: items.length
   });
 });
 
+// Get all items
 app.get('/api/items', (req, res) => {
+  console.log('GET /api/items - returning', items.length, 'items');
   res.json(items);
 });
 
+// Get single item
 app.get('/api/items/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
   
@@ -84,13 +81,14 @@ app.get('/api/items/:id', (req, res) => {
     return res.status(404).json({ error: 'Item not found' });
   }
 
+  console.log('GET /api/items/:id - returning item', id);
   res.json(item);
 });
 
+// Create item
 app.post('/api/items', (req, res) => {
   const { name, description, price, image, category, brand, stock, rating } = req.body;
 
-  // Basic validation
   if (!name || !description || !price) {
     return res.status(400).json({ 
       error: 'Missing required fields',
@@ -114,12 +112,18 @@ app.post('/api/items', (req, res) => {
   };
 
   items.push(newItem);
+  console.log('POST /api/items - created item', newItem.id);
   res.status(201).json(newItem);
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  console.log('404 - Route not found:', req.method, req.url);
+  res.status(404).json({ 
+    error: 'Route not found',
+    path: req.url,
+    method: req.method
+  });
 });
 
 // Error handler
@@ -127,19 +131,9 @@ app.use((err, req, res, next) => {
   console.error('Server error:', err);
   res.status(500).json({
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: err.message
   });
 });
 
-// ── Start server (only in development) ─────────────────────────
-const PORT = process.env.PORT || 3001;
-
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
-}
-
-// Important for serverless / platforms like Render, Railway, Vercel Functions
+// Export for Vercel serverless
 export default app;
