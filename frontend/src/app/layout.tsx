@@ -24,7 +24,7 @@ export default function RootLayout({
         <Navbar />
         <main className="min-h-screen">{children}</main>
         <Footer />
-        <ClientToaster />           {/* ← safe client-only wrapper */}
+        <ClientToaster />          
       </body>
     </html>
   );
