@@ -1,5 +1,3 @@
-// backend/api/index.js - Vercel Serverless Function (ES Module)
-
 import express from 'express';
 import cors from 'cors';
 
@@ -53,21 +51,26 @@ let items = [
 
 let nextId = 25;
 
-// Routes
+// ✅ FIXED ROUTES - Remove /api/ prefix, Vercel adds it automatically!
+
+// Health check - accessed as /api/health
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'production',
-    uptime: process.uptime()
+    environment: 'production',
+    itemCount: items.length
   });
 });
 
-app.get('/api/items', (req, res) => {
+// Get all items - accessed as /api/items
+app.get('/items', (req, res) => {
+  console.log('GET /items - returning', items.length, 'items');
   res.json(items);
 });
 
-app.get('/api/items/:id', (req, res) => {
+// Get single item - accessed as /api/items/:id
+app.get('/items/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
   
   if (Number.isNaN(id)) {
@@ -80,10 +83,12 @@ app.get('/api/items/:id', (req, res) => {
     return res.status(404).json({ error: 'Item not found' });
   }
 
+  console.log('GET /items/:id - returning item', id);
   res.json(item);
 });
 
-app.post('/api/items', (req, res) => {
+// Create item - accessed as /api/items
+app.post('/items', (req, res) => {
   const { name, description, price, image, category, brand, stock, rating } = req.body;
 
   if (!name || !description || !price) {
@@ -109,12 +114,18 @@ app.post('/api/items', (req, res) => {
   };
 
   items.push(newItem);
+  console.log('POST /items - created item', newItem.id);
   res.status(201).json(newItem);
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  console.log('404 - Route not found:', req.method, req.url);
+  res.status(404).json({ 
+    error: 'Route not found',
+    path: req.url,
+    method: req.method
+  });
 });
 
 // Error handler
@@ -122,7 +133,7 @@ app.use((err, req, res, next) => {
   console.error('Server error:', err);
   res.status(500).json({
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: err.message
   });
 });
 
